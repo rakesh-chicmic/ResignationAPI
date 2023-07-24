@@ -1,4 +1,7 @@
-﻿namespace ResignationAPI.Models.DTOs
+﻿using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
+
+namespace ResignationAPI.Models.DTOs
 {
     public class ResignationStatusDTO
     {

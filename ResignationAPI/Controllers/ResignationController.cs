@@ -73,7 +73,7 @@ namespace ResignationAPI.Controllers
                 _response.StatusCode = HttpStatusCode.BadRequest;
                 _response.IsSuccess = false;
 
-                if (resignRequestDTO.ResignationDate == DateTime.MinValue)
+                if (resignRequestDTO.ResignationDate < DateTime.Now)
                 {
                     _response.Messages = "Please Enter the valid date";
                     _response.Data = null;
@@ -146,6 +146,7 @@ namespace ResignationAPI.Controllers
                 {
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.Messages = "This Resignation doesn't belong to this UserId";
+                    _response.IsSuccess = false;
                     return _response;
                 }
                 updateResign.Reason = resignUpdateDTO.Reason;
@@ -178,6 +179,7 @@ namespace ResignationAPI.Controllers
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.Messages = "Resignation Not Found";
+                    _response.IsSuccess = false;
                     return _response;
                 }
                 await _resignationRepository.RemoveAsync(id);
