@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using ResignationAPI.Models;
 using ResignationAPI.Repository.IRepository;
@@ -15,14 +16,49 @@ namespace ResignationAPI.Repository
             _resignationCollection = mongoDatabase.GetCollection<Resignation>(databaseSettings.Value.CollectionName);
         }
 
-        public async Task<List<Resignation>> GetAsync()
-        {
-            return await _resignationCollection.Find(_ => true).ToListAsync();
-        }
-
-        public async Task<Resignation?> GetAsync(string id)
+        public async Task<Resignation?> GetByIdAsync(string id)
         {
             return await _resignationCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
+        }
+
+        public async Task<List<Resignation>> GetAsync(int? limit, int? index, string? sortKey, string? sortDirection, string? id, string? status, string? userId)
+        {
+            limit ??= 0;
+            index ??= 0;
+            sortKey ??= "CreatedAT";
+            sortDirection ??= "asc";
+            id ??= "";
+            status ??= "";
+            userId ??= "";
+            var sortDefinition = Builders<Resignation>.Sort.Ascending(sortKey);
+            var searchFilter = Builders<Resignation>.Filter.Empty;
+            if (status!="")
+            {
+                var statusFilter = Builders<Resignation>.Filter.Eq(r => r.Status, status);
+                searchFilter &= statusFilter;
+            }
+            if (!string.IsNullOrEmpty(id))
+            {
+                var idFilter = Builders<Resignation>.Filter.Eq(r => r.Id, id);
+                searchFilter &= idFilter;
+            }
+            if (!string.IsNullOrEmpty(status))
+            {
+                var userIdFilter = Builders<Resignation>.Filter.Eq(r => r.UserId, userId);
+                searchFilter &= userIdFilter;
+            }
+
+
+            if (sortDirection.ToLower() == "desc")
+            {
+                sortDefinition = Builders<Resignation>.Sort.Descending(sortKey);
+            }
+            var resignations = await _resignationCollection.Find(searchFilter)
+                                          .Sort(sortDefinition)
+                                          .Skip(index.Value * limit.Value)
+                                          .Limit(limit.Value)
+                                          .ToListAsync();
+            return resignations;
         }
 
         public async Task CreateAsync(Resignation resignRequest)

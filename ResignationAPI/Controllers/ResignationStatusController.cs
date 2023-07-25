@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ResignationAPI.Models;
 using ResignationAPI.Models.DTOs;
@@ -19,49 +20,42 @@ namespace ResignationAPI.Controllers
             _response = new();
         }
 
-        [HttpPut("{id:length(24)}")]
+        [HttpPut("{id:length(24)}"),Authorize]
         public async Task<ActionResult<APIResponse>> Update(string id, ResignationStatusDTO resignUpdateDTO)
         {
+            var userClaims = User.Claims;
+            var userId = userClaims.FirstOrDefault(c => c.Type == "_id")?.Value;
             try
             {
-                var updateResign = await _resignationRepository.GetAsync(id);
+                var updateResign = await _resignationRepository.GetByIdAsync(id);
 
                 if (resignUpdateDTO.Status == null)
                 {
                     resignUpdateDTO.Status = updateResign.Status;
                 }
-                if (resignUpdateDTO.RevailingDate == DateTime.MinValue)
+                if (resignUpdateDTO.RevealingDate == DateTime.MinValue)
                 {
-                    resignUpdateDTO.RevailingDate = updateResign.RevailingDate;
-                }
-
-                if (resignUpdateDTO.ApprovedBY == null)
-                {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.Messages = "Please enter the ApprovedBy Id";
-                    _response.IsSuccess = false;
-                    return _response;
+                    resignUpdateDTO.RevealingDate = updateResign.RevealingDate;
                 }
                 if (updateResign == null)
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
-                    _response.Messages = "Resignation Not Found";
+                    _response.Message = "Resignation Not Found";
                     return _response;
                 }
                 updateResign.Status = resignUpdateDTO.Status;
-                updateResign.RevailingDate = resignUpdateDTO.RevailingDate;
-                updateResign.ApprovedBY = resignUpdateDTO.ApprovedBY;
+                updateResign.RevealingDate = resignUpdateDTO.RevealingDate;
+                updateResign.ApprovedBY = userId;
                 updateResign.UpdatedAT = DateTime.Now;
 
                 await _resignationRepository.UpdateAsync(id, updateResign);
                 _response.StatusCode = HttpStatusCode.OK;
-                _response.Messages = "Updated the Status of Resignation";
+                _response.Message = "Updated the Status of Resignation";
                 _response.Data = resignUpdateDTO;
                 return Ok(_response);
             }
             catch (Exception)
             {
-
                 throw;
             }         
         }
