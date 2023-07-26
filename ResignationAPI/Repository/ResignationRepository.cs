@@ -9,22 +9,29 @@ namespace ResignationAPI.Repository
 {
     public class ResignationRepository : IResignationRepository
     {
-        // mongodb collection 
+        // MongoDB collection for the "Resignation" documents
         private readonly IMongoCollection<Resignation> _resignationCollection;
+
+        // Constructor to initialize the repository with MongoDB settings
         public ResignationRepository(IOptions<DatabaseSettings> databaseSettings)
         {
+            // Create a MongoClient instance using the provided connection string
             var mongoClient = new MongoClient(databaseSettings.Value.ConnectionString);
+
+            // Get the MongoDB database based on the provided database name
             var mongoDatabase = mongoClient.GetDatabase(databaseSettings.Value.DatabaseName);
+
+            // Get the MongoDB collection for the "Resignation" documents based on the provided collection name
             _resignationCollection = mongoDatabase.GetCollection<Resignation>(databaseSettings.Value.CollectionName);
         }
 
-        // Get resignation by id
+        // Get a single resignation document by its id
         public async Task<Resignation?> GetByIdAsync(string id)
         {
             return await _resignationCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
         }
 
-        // get resignation based on different filters 
+        // Get resignation documents based on different filters (limit, index, sorting, etc.)
         public async Task<List<Resignation>> GetAsync(int? limit, int? index, string? sortKey, string? sortDirection, string? id, string? status, string? userId)
         {
             limit ??= 0;
@@ -34,7 +41,11 @@ namespace ResignationAPI.Repository
             id ??= "";
             status ??= "";
             userId ??= "";
+
+            // Define the sorting criteria based on the provided sortKey and sortDirection
             var sortDefinition = Builders<Resignation>.Sort.Ascending(sortKey);
+
+            // Define the filter for the query based on the provided filter criteria
             var searchFilter = Builders<Resignation>.Filter.Empty;
             if (!string.IsNullOrEmpty(status))
             {
@@ -62,27 +73,24 @@ namespace ResignationAPI.Repository
                 sortDefinition = Builders<Resignation>.Sort.Ascending(sortKey);
             }
 
-            var resignations = await _resignationCollection.Find(searchFilter)
-                                          .Sort(sortDefinition)
-                                          .Skip((index - 1) * limit)
-                                          .Limit(limit)
-                                          .ToListAsync();
+            // Perform the database query using the filter and sorting criteria, and apply pagination
+            var resignations = await _resignationCollection.Find(searchFilter).Sort(sortDefinition).Skip((index - 1) * limit).Limit(limit).ToListAsync();
             return resignations;
         }
 
-        // create a resignation request
+        // Create a new resignation request document in the database
         public async Task CreateAsync(Resignation resignRequest)
         {
             await _resignationCollection.InsertOneAsync(resignRequest);
         }
 
-        // update the resignation request
+        // Update an existing resignation document in the database
         public async Task UpdateAsync(string id, Resignation updatedResign)
         {
             await _resignationCollection.ReplaceOneAsync(x => x.Id == id, updatedResign);
         }
 
-        // delete the resignation request
+        // Delete a resignation document from the database based on its id
         public async Task RemoveAsync(string id)
         {
             await _resignationCollection.DeleteOneAsync(x => x.Id == id);

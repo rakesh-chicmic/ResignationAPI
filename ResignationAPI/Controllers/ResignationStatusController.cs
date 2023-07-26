@@ -32,6 +32,7 @@ namespace ResignationAPI.Controllers
             var userId = userClaims.FirstOrDefault(c => c.Type == "_id")?.Value;
             try
             {
+                // Call the GetByIdAsync method from the repository to retrieve the existing resignation
                 var updateResign = await _resignationRepository.GetByIdAsync(id);
                 if (updateResign == null)
                 {
@@ -39,7 +40,7 @@ namespace ResignationAPI.Controllers
                     _response.Message = "Resignation Not Found";
                     return _response;
                 }
-
+                // Validations on resignUpdateDTO
                 if (resignUpdateDTO.Status == null)
                 {
                     resignUpdateDTO.Status = updateResign.Status;
@@ -61,13 +62,13 @@ namespace ResignationAPI.Controllers
                     }
                 }
 
-                // updated the details
+                // Update the resignation details
                 updateResign.Status = resignUpdateDTO.Status;
                 updateResign.RevealingDate = resignUpdateDTO.RevealingDate;
                 updateResign.ApprovedBy = userId;
                 updateResign.UpdatedAt = DateTime.Now;
 
-                // update status service called
+                // Call the UpdateAsync method from the _resignationRepository to update the resignation.
                 await _resignationRepository.UpdateAsync(id, updateResign);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Message = "Updated the Status of Resignation";
@@ -76,7 +77,7 @@ namespace ResignationAPI.Controllers
             }
             catch (Exception ex)
             {
-                // save the error in log
+                // Save the error in log
                 _loggingRepository.LogError(ex.Message);
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.Message = "Error retrieving data from the database. Check the logs";

@@ -19,14 +19,15 @@ namespace ResignationAPI.Controllers
     [ApiController]
     public class ResignationController : ControllerBase
     {
-        // injected the _resignationRepository , automapper .
         private readonly IResignationRepository _resignationRepository;
         private readonly ILoggingRepository _loggingRepository;
         private readonly IMapper _mapper;   
         APIResponse _response ;
 
+        // Inject the required dependencies: resignationRepository, mapper, loggingRepository
         public ResignationController(IResignationRepository resignationRepository,IMapper mapper, ILoggingRepository loggingRepository)
         {
+            _resignationRepository = resignationRepository;
             _resignationRepository = resignationRepository;
             _loggingRepository = loggingRepository;
             _mapper = mapper;         
@@ -41,7 +42,7 @@ namespace ResignationAPI.Controllers
         {
             try
             {
-                // called the Get resignations service
+                // Call the GetAsync method from the _resignationRepository to retrieve resignation details based on provided filters
                 var resignation = await _resignationRepository.GetAsync(limit, index , sortKey , sortDirection, id, status, userId);
                 if (resignation == null)
                 {
@@ -56,7 +57,7 @@ namespace ResignationAPI.Controllers
                 return Ok(_response);
             }
             catch (Exception ex) {
-                // save the error in log
+                // Save the error in log
                 _loggingRepository.LogError(ex.Message);
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.Message = "Error retrieving data from the database. Check the logs";
@@ -77,7 +78,7 @@ namespace ResignationAPI.Controllers
             try
             {
                 _response.StatusCode = HttpStatusCode.BadRequest;
-                // validations on resignRequestDTO
+                // Validations on resignRequestDTO
                 if (resignRequestDTO.ResignationDate < DateTime.Now)
                 {
                     _response.Message = "Please Enter the valid date";
@@ -88,7 +89,7 @@ namespace ResignationAPI.Controllers
                     _response.Message = "Please Enter the Reason";
                     return _response;
                 }
-                // mapping resignRequestDTO into Resignation
+                // Mapping resignRequestDTO into Resignation
                 Resignation request = _mapper.Map<Resignation>(resignRequestDTO);
                 request.UserId = userId;
                 request.Status = "Pending";
@@ -97,7 +98,7 @@ namespace ResignationAPI.Controllers
                 request.UpdatedAt = DateTime.Now;
                 request.ApprovedBy = null;
 
-                // called the create resignation service
+                // Call the CreateAsync method from the _resignationRepository to create a new resignation request
                 await _resignationRepository.CreateAsync(request);
 
                 _response.StatusCode = HttpStatusCode.OK;
@@ -127,7 +128,8 @@ namespace ResignationAPI.Controllers
             var userClaims = User.Claims;
             var userId = userClaims.FirstOrDefault(c => c.Type == "_id")?.Value;
             try
-            {   // called the get resignation service
+            {
+                // Call the GetByIdAsync method from the repository to retrieve the existing resignation
                 var updateResign = await _resignationRepository.GetByIdAsync(id);
                 if (updateResign == null)
                 {
@@ -136,7 +138,7 @@ namespace ResignationAPI.Controllers
                     return _response;
                 }
 
-                // validations on resignUpdateDTO
+                // Validations on resignUpdateDTO
                 if (resignUpdateDTO.ResignationDate == DateTime.MinValue)
                 {
                     resignUpdateDTO.ResignationDate = updateResign.ResignationDate;
@@ -163,13 +165,13 @@ namespace ResignationAPI.Controllers
                     resignUpdateDTO.Comments = updateResign.Comments;
                 }
 
-                // updated the resignation details
+                // Update the resignation details
                 updateResign.Reason = resignUpdateDTO.Reason;
                 updateResign.ResignationDate = resignUpdateDTO.ResignationDate;
                 updateResign.Comments = resignUpdateDTO.Comments;
                 updateResign.UpdatedAt = DateTime.Now;
 
-                // called the update resignation service
+                // Call the UpdateAsync method from the _resignationRepository to update the resignation.
                 await _resignationRepository.UpdateAsync(id, updateResign);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Status = true;
@@ -179,7 +181,7 @@ namespace ResignationAPI.Controllers
             }
             catch (Exception ex)
             {
-                // save the error in log
+                // Save the error in log
                 _loggingRepository.LogError(ex.Message);
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.Message = "Error retrieving data from the database. Check the logs";
@@ -198,7 +200,7 @@ namespace ResignationAPI.Controllers
             var userId = userClaims.FirstOrDefault(c => c.Type == "_id")?.Value;
             try
             {
-                // called the get resignation service
+                // Call the GetByIdAsync method from the _resignationRepository to retrieve the existing resignation
                 var resignation = await _resignationRepository.GetByIdAsync(id);
                 if (resignation == null)
                 {
@@ -206,7 +208,7 @@ namespace ResignationAPI.Controllers
                     _response.Message = "Resignation Not Found";
                     return _response;
                 }
-                // called the remove resignation service
+                // Call the RemoveAsync method from the _resignationRepository to delete the resignation 
                 await _resignationRepository.RemoveAsync(id);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Status = true;
@@ -215,7 +217,7 @@ namespace ResignationAPI.Controllers
             }
             catch (Exception ex)
             {
-                // save the error in log
+                // Save the error in log
                 _loggingRepository.LogError(ex.Message);
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.Message = "Error retrieving data from the database. Check the logs";
