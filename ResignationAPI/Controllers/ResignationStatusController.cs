@@ -12,14 +12,20 @@ namespace ResignationAPI.Controllers
     public class ResignationStatusController : ControllerBase
     {
         private readonly IResignationRepository _resignationRepository;
+        private readonly ILoggingRepository _loggingRepository;
         APIResponse _response;
-        public ResignationStatusController(IResignationRepository resignationRepository)
+        public ResignationStatusController(IResignationRepository resignationRepository, ILoggingRepository loggingRepository)
         {
             _resignationRepository = resignationRepository;
+            _loggingRepository = loggingRepository;
             _response = new();
         }
 
         [HttpPut("{id:length(24)}"),Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<APIResponse>> Update(string id, ResignationStatusDTO resignUpdateDTO)
         {
             var userClaims = User.Claims;
@@ -42,7 +48,19 @@ namespace ResignationAPI.Controllers
                 {
                     resignUpdateDTO.RevealingDate = updateResign.RevealingDate;
                 }
-               
+                else
+                {
+                    if (resignUpdateDTO.RevealingDate != updateResign.RevealingDate)
+                    {
+                        if (resignUpdateDTO.RevealingDate < DateTime.Now)
+                        {
+                            _response.Message = "Please Enter the valid date";
+                            _response.StatusCode = HttpStatusCode.BadRequest;
+                            return _response;
+                        }
+                    }
+                }
+
                 // updated the details
                 updateResign.Status = resignUpdateDTO.Status;
                 updateResign.RevealingDate = resignUpdateDTO.RevealingDate;
@@ -56,9 +74,14 @@ namespace ResignationAPI.Controllers
                 _response.Data = resignUpdateDTO;
                 return Ok(_response);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                // save the error in log
+                _loggingRepository.LogError(ex.Message);
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.Message = "Error retrieving data from the database. Check the logs";
+                _response.Status = false;
+                return _response;
             }         
         }
     }

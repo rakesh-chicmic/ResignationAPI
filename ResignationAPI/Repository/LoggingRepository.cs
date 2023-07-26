@@ -2,8 +2,9 @@
 using log4net.Core;
 using log4net;
 using System.Reflection;
+using ResignationAPI.Repository.IRepository;
 
-namespace ResignationAPI.Repository.IRepository
+namespace ResignationAPI.Repository
 {
     public class LoggingRepository : ILoggingRepository
     {

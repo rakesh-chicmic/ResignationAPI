@@ -3,6 +3,7 @@ using log4net;
 using log4net.Config;
 using log4net.Core;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection.KeyManagement.Internal;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
@@ -35,6 +36,7 @@ namespace ResignationAPI.Controllers
         [HttpGet,Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<APIResponse>> Get(int? limit, int? index, string? sortKey, string? sortDirection, string? status, string? id, string? userId)
         {
             try
@@ -51,17 +53,23 @@ namespace ResignationAPI.Controllers
                 _response.Message = "Resignation Details";
                 _response.Status = true;
                 _response.Data = resignation;
-                return _response;
+                return Ok(_response);
             }
             catch (Exception ex) {
+                // save the error in log
                 _loggingRepository.LogError(ex.Message);
-                throw;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.Message = "Error retrieving data from the database. Check the logs";
+                _response.Status = false;
+                return _response;
+               
             }
         }
 
         [HttpPost,Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<APIResponse>> Post(ResignationRequestDTO resignRequestDTO)
         {
             var userClaims = User.Claims;
@@ -100,8 +108,12 @@ namespace ResignationAPI.Controllers
             }
             catch (Exception ex)
             {
+                // save the error in log
                 _loggingRepository.LogError(ex.Message);
-                throw;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.Message = "Error retrieving data from the database. Check the logs";
+                _response.Status = false;
+                return _response;
             }
         }
 
@@ -109,6 +121,7 @@ namespace ResignationAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<APIResponse>> Update(string id, ResignationRequestDTO resignUpdateDTO)
         {
             var userClaims = User.Claims;
@@ -162,18 +175,23 @@ namespace ResignationAPI.Controllers
                 _response.Status = true;
                 _response.Message = "Updated the Resignation Details";
                 _response.Data = resignUpdateDTO;
-                return _response;
+                return Ok(_response);
             }
             catch (Exception ex)
             {
+                // save the error in log
                 _loggingRepository.LogError(ex.Message);
-                throw;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.Message = "Error retrieving data from the database. Check the logs";
+                _response.Status = false;
+                return _response;
             }
         }
 
         [HttpDelete("{id:length(24)}"), Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<APIResponse>> Delete(string id)
         {
             var userClaims = User.Claims;
@@ -193,14 +211,17 @@ namespace ResignationAPI.Controllers
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Status = true;
                 _response.Message = "Deleted the Resignation";
-                return _response;
+                return Ok(_response);
             }
             catch (Exception ex)
             {
+                // save the error in log
                 _loggingRepository.LogError(ex.Message);
-                throw;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.Message = "Error retrieving data from the database. Check the logs";
+                _response.Status = false;
+                return _response;
             }
         }
-
     }
 }
