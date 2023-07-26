@@ -5,7 +5,7 @@ namespace ResignationAPI.Models.DTOs
 {
     public class ResignationStatusDTO
     {
-        public string? Status { get; set; }
-        public DateTime RevealingDate { get; set; }
+        public int Status { get; set; }
+        public DateTime RevelationDate { get; set; }
     }
 }

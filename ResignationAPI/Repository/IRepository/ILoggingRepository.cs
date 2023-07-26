@@ -7,7 +7,6 @@ namespace ResignationAPI.Repository.IRepository
 {
     public interface ILoggingRepository
     {
-        public void LogError(string message);
-       
+        public void LogError(string message);      
     }
 }

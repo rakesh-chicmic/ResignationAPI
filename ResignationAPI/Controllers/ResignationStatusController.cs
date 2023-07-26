@@ -36,41 +36,39 @@ namespace ResignationAPI.Controllers
                 var updateResign = await _resignationRepository.GetByIdAsync(id);
                 if (updateResign == null)
                 {
-                    _response.StatusCode = HttpStatusCode.NotFound;
-                    _response.Message = "Resignation Not Found";
-                    return _response;
+                    return NotFound(_response.ErrorResponse("Resignation Not Found", HttpStatusCode.NotFound));
                 }
                 // Validations on resignUpdateDTO
-                if (resignUpdateDTO.Status == null)
+                if (resignUpdateDTO.Status != updateResign.Status)
                 {
-                    resignUpdateDTO.Status = updateResign.Status;
+                    if (resignUpdateDTO.Status >= 5 || resignUpdateDTO.Status <= 0)
+                    {
+                        return BadRequest(_response.ErrorResponse("Please Enter the Valid Status number", HttpStatusCode.BadRequest));
+                    }
                 }
-                if (resignUpdateDTO.RevealingDate == DateTime.MinValue)
+                if (resignUpdateDTO.RevelationDate == DateTime.MinValue)
                 {
-                    resignUpdateDTO.RevealingDate = updateResign.RevealingDate;
+                    resignUpdateDTO.RevelationDate = updateResign.RevelationDate;
                 }
                 else
                 {
-                    if (resignUpdateDTO.RevealingDate != updateResign.RevealingDate)
+                    if (resignUpdateDTO.RevelationDate != updateResign.RevelationDate)
                     {
-                        if (resignUpdateDTO.RevealingDate < DateTime.Now)
+                        if (resignUpdateDTO.RevelationDate < DateTime.Now)
                         {
-                            _response.Message = "Please Enter the valid date";
-                            _response.StatusCode = HttpStatusCode.BadRequest;
-                            return _response;
+                            return BadRequest(_response.ErrorResponse("Please Enter the Valid Date", HttpStatusCode.BadRequest));
                         }
                     }
                 }
 
                 // Update the resignation details
                 updateResign.Status = resignUpdateDTO.Status;
-                updateResign.RevealingDate = resignUpdateDTO.RevealingDate;
+                updateResign.RevelationDate = resignUpdateDTO.RevelationDate;
                 updateResign.ApprovedBy = userId;
                 updateResign.UpdatedAt = DateTime.Now;
 
                 // Call the UpdateAsync method from the _resignationRepository to update the resignation.
                 await _resignationRepository.UpdateAsync(id, updateResign);
-                _response.StatusCode = HttpStatusCode.OK;
                 _response.Message = "Updated the Status of Resignation";
                 _response.Data = resignUpdateDTO;
                 return Ok(_response);
@@ -79,10 +77,7 @@ namespace ResignationAPI.Controllers
             {
                 // Save the error in log
                 _loggingRepository.LogError(ex.Message);
-                _response.StatusCode = HttpStatusCode.InternalServerError;
-                _response.Message = "Error retrieving data from the database. Check the logs";
-                _response.Status = false;
-                return _response;
+                return _response.ErrorResponse();
             }         
         }
     }

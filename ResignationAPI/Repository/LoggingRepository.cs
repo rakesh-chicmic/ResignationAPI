@@ -8,6 +8,7 @@ namespace ResignationAPI.Repository
 {
     public class LoggingRepository : ILoggingRepository
     {
+        // log4net
         public void LogError(string message)
         {
             var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());

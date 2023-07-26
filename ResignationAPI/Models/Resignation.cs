@@ -14,12 +14,12 @@ namespace ResignationAPI.Models
         public string? UserId { get; set; }
 
         [BsonElement("status")]
-        public string? Status { get; set; }
+        public int Status { get; set; }
 
-        [BsonElement("resignationDate")]
-        public DateTime ResignationDate { get; set; }
-        [BsonElement("revealingDate")]
-        public DateTime RevealingDate { get; set; }
+        [BsonElement("resignDate")]
+        public DateTime ResignDate { get; set; }
+        [BsonElement("revelationDate")]
+        public DateTime RevelationDate { get; set; }
 
         [BsonElement("reason")]
         public string? Reason { get; set; }

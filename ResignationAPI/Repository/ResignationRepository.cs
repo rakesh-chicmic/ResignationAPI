@@ -32,14 +32,14 @@ namespace ResignationAPI.Repository
         }
 
         // Get resignation documents based on different filters (limit, index, sorting, etc.)
-        public async Task<List<Resignation>> GetAsync(int? limit, int? index, string? sortKey, string? sortDirection, string? id, string? status, string? userId)
+        public async Task<List<Resignation>> GetAsync(int? limit, int? index, string? sortKey, string? sortDirection, string? id, int? status, string? userId)
         {
             limit ??= 0;
             index ??= 0;
             sortKey ??= "CreatedAT";
             sortDirection ??= "asc";
             id ??= "";
-            status ??= "";
+            status ??= 1;
             userId ??= "";
 
             // Define the sorting criteria based on the provided sortKey and sortDirection
@@ -47,11 +47,10 @@ namespace ResignationAPI.Repository
 
             // Define the filter for the query based on the provided filter criteria
             var searchFilter = Builders<Resignation>.Filter.Empty;
-            if (!string.IsNullOrEmpty(status))
-            {
-                var statusFilter = Builders<Resignation>.Filter.Regex("Status", new BsonRegularExpression(status, "i"));
-                searchFilter &= statusFilter;
-            }
+            
+            var statusFilter = Builders<Resignation>.Filter.Eq(r => r.Status, status);
+            searchFilter &= statusFilter;
+            
             if (!string.IsNullOrEmpty(id))
             {
                 var idFilter = Builders<Resignation>.Filter.Eq(r => r.Id, id);
