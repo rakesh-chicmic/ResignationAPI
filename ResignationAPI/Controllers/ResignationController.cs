@@ -31,12 +31,12 @@ namespace ResignationAPI.Controllers
 
         [HttpGet,Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<APIResponse>> Get(int? limit, int? index, string? sortKey, string? sortDirection, string? id, string? status, string? userId)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<APIResponse>> Get(int? limit, int? index, string? sortKey, string? sortDirection, string? status, string? id, string? userId)
         {
             try
             {
                 var resignation = await _resignationRepository.GetAsync(limit, index , sortKey , sortDirection, id, status, userId);
-
                 if (resignation == null)
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
@@ -45,14 +45,18 @@ namespace ResignationAPI.Controllers
                 }
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Message = "Resignation Details";
+                _response.Status = true;
                 _response.Data = resignation;
-                return Ok(_response);
-            }catch (Exception) {
+                return _response;
+            }
+            catch (Exception) {
                 throw;
             }
         }
 
         [HttpPost,Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<APIResponse>> Post(ResignationRequestDTO resignRequestDTO)
         {
             var userClaims = User.Claims;
@@ -60,18 +64,14 @@ namespace ResignationAPI.Controllers
             try
             {
                 _response.StatusCode = HttpStatusCode.BadRequest;
-                _response.Status = false;
-
                 if (resignRequestDTO.ResignationDate < DateTime.Now)
                 {
                     _response.Message = "Please Enter the valid date";
-                    _response.Data = null;
                     return _response;
                 }
-                if (resignRequestDTO.Reason == null)
+                if (string.IsNullOrEmpty(resignRequestDTO.Reason))
                 {
                     _response.Message = "Please Enter the Reason";
-                    _response.Data = null;
                     return _response;
                 }             
                 Resignation request = new Resignation()
@@ -81,10 +81,10 @@ namespace ResignationAPI.Controllers
                     Reason = resignRequestDTO.Reason,
                     ResignationDate = resignRequestDTO.ResignationDate,
                     RevealingDate = resignRequestDTO.ResignationDate.AddMonths(2),
-                    Comments = resignRequestDTO.Comments,
-                    CreatedAT = DateTime.Now,
-                    UpdatedAT = DateTime.Now,
-                    ApprovedBY = null,
+                    Comments = resignRequestDTO.Comments!,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now,
+                    ApprovedBy = null,
                 };
                 await _resignationRepository.CreateAsync(request);
 
@@ -101,6 +101,9 @@ namespace ResignationAPI.Controllers
         }
 
         [HttpPut("{id:length(24)}"),Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<APIResponse>> Update(string id, ResignationRequestDTO resignUpdateDTO)
         {
             var userClaims = User.Claims;
@@ -108,16 +111,28 @@ namespace ResignationAPI.Controllers
             try
             {   
                 var updateResign = await _resignationRepository.GetByIdAsync(id);
-
                 if (updateResign == null)
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.Message = "Resignation Not Found";
                     return _response;
                 }
+
                 if (resignUpdateDTO.ResignationDate == DateTime.MinValue)
                 {
                     resignUpdateDTO.ResignationDate = updateResign.ResignationDate;
+                }
+                else
+                {
+                    if(resignUpdateDTO.ResignationDate != updateResign.ResignationDate)
+                    {
+                        if (resignUpdateDTO.ResignationDate < DateTime.Now)
+                        {
+                            _response.Message = "Please Enter the valid date";
+                            _response.StatusCode = HttpStatusCode.BadRequest;
+                            return _response;
+                        }
+                    }
                 }
                 if (resignUpdateDTO.Reason == null)
                 {
@@ -130,23 +145,24 @@ namespace ResignationAPI.Controllers
                 updateResign.Reason = resignUpdateDTO.Reason;
                 updateResign.ResignationDate = resignUpdateDTO.ResignationDate;
                 updateResign.Comments = resignUpdateDTO.Comments;
-                updateResign.UpdatedAT = DateTime.Now;
+                updateResign.UpdatedAt = DateTime.Now;
 
                 await _resignationRepository.UpdateAsync(id, updateResign);
                 _response.StatusCode = HttpStatusCode.OK;
+                _response.Status = true;
                 _response.Message = "Updated the Resignation Details";
                 _response.Data = resignUpdateDTO;
-                return Ok(_response);
+                return _response;
             }
             catch (Exception)
             {
-
                 throw;
-            }
-            
+            }        
         }
 
         [HttpDelete("{id:length(24)}"), Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<APIResponse>> Delete(string id)
         {
             var userClaims = User.Claims;
@@ -154,20 +170,17 @@ namespace ResignationAPI.Controllers
             try
             {
                 var resignation = await _resignationRepository.GetByIdAsync(id);
-
                 if (resignation == null)
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
                     _response.Message = "Resignation Not Found";
-                    _response.Status = false;
                     return _response;
                 }
-
                 await _resignationRepository.RemoveAsync(id);
                 _response.StatusCode = HttpStatusCode.OK;
+                _response.Status = true;
                 _response.Message = "Deleted the Resignation";
-                _response.Data = null;
-                return Ok(_response);
+                return _response;
             }
             catch (Exception)
             {

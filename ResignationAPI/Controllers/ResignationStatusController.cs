@@ -28,6 +28,12 @@ namespace ResignationAPI.Controllers
             try
             {
                 var updateResign = await _resignationRepository.GetByIdAsync(id);
+                if (updateResign == null)
+                {
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    _response.Message = "Resignation Not Found";
+                    return _response;
+                }
 
                 if (resignUpdateDTO.Status == null)
                 {
@@ -37,16 +43,11 @@ namespace ResignationAPI.Controllers
                 {
                     resignUpdateDTO.RevealingDate = updateResign.RevealingDate;
                 }
-                if (updateResign == null)
-                {
-                    _response.StatusCode = HttpStatusCode.NotFound;
-                    _response.Message = "Resignation Not Found";
-                    return _response;
-                }
+               
                 updateResign.Status = resignUpdateDTO.Status;
                 updateResign.RevealingDate = resignUpdateDTO.RevealingDate;
-                updateResign.ApprovedBY = userId;
-                updateResign.UpdatedAT = DateTime.Now;
+                updateResign.ApprovedBy = userId;
+                updateResign.UpdatedAt = DateTime.Now;
 
                 await _resignationRepository.UpdateAsync(id, updateResign);
                 _response.StatusCode = HttpStatusCode.OK;

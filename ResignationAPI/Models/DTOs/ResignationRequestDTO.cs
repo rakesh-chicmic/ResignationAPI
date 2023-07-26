@@ -4,6 +4,6 @@
     {
         public DateTime ResignationDate { get; set; }
         public string? Reason { get; set; } 
-        public string Comments { get; set; } = null!;
+        public string? Comments { get; set; } 
     }
 }

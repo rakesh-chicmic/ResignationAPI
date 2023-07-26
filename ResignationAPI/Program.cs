@@ -30,18 +30,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         ClockSkew = TimeSpan.FromMinutes(1),
         RequireExpirationTime = false
     };
-    options.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = context =>
-        {
-            var accessToken = context.Request.Query["authorization"];
-            if (string.IsNullOrEmpty(accessToken) == false)
-            {
-                context.Token = accessToken;
-            }
-            return Task.CompletedTask;
-        }
-    };
 });
 
 builder.Services.AddControllers();
@@ -53,7 +41,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Description = "Standard Authorizationn header using the Bearer Scheme (\"bearer {token}\")",
         In = ParameterLocation.Header,
-        Name = "authorization",
+        Name = "Authorization",
         Type = SecuritySchemeType.ApiKey
     });
     options.OperationFilter<SecurityRequirementsOperationFilter>();
