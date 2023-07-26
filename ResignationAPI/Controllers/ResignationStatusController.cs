@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ResignationAPI.Models;
 using ResignationAPI.Models.DTOs;
@@ -44,11 +43,13 @@ namespace ResignationAPI.Controllers
                     resignUpdateDTO.RevealingDate = updateResign.RevealingDate;
                 }
                
+                // updated the details
                 updateResign.Status = resignUpdateDTO.Status;
                 updateResign.RevealingDate = resignUpdateDTO.RevealingDate;
                 updateResign.ApprovedBy = userId;
                 updateResign.UpdatedAt = DateTime.Now;
 
+                // update status service called
                 await _resignationRepository.UpdateAsync(id, updateResign);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Message = "Updated the Status of Resignation";

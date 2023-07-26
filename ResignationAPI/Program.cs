@@ -16,6 +16,7 @@ builder.Services.Configure<DatabaseSettings>(
     builder.Configuration.GetSection("Database"));
 
 builder.Services.AddScoped<IResignationRepository,ResignationRepository>();
+builder.Services.AddScoped<ILoggingRepository, LoggingRepository>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 

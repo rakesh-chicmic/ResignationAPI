@@ -1,4 +1,7 @@
 ﻿using AutoMapper;
+using log4net;
+using log4net.Config;
+using log4net.Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -6,13 +9,8 @@ using MongoDB.Driver;
 using ResignationAPI.Models;
 using ResignationAPI.Models.DTOs;
 using ResignationAPI.Repository.IRepository;
-using System.Collections.Generic;
-using System;
-using System.Data;
-using System.Globalization;
 using System.Net;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using System.Reflection;
 
 namespace ResignationAPI.Controllers
 {
@@ -20,12 +18,17 @@ namespace ResignationAPI.Controllers
     [ApiController]
     public class ResignationController : ControllerBase
     {
+        // injected the _resignationRepository , automapper .
         private readonly IResignationRepository _resignationRepository;
+        private readonly ILoggingRepository _loggingRepository;
+        private readonly IMapper _mapper;   
         APIResponse _response ;
 
-        public ResignationController(IResignationRepository resignationRepository)
+        public ResignationController(IResignationRepository resignationRepository,IMapper mapper, ILoggingRepository loggingRepository)
         {
             _resignationRepository = resignationRepository;
+            _loggingRepository = loggingRepository;
+            _mapper = mapper;         
             _response = new();
         }
 
@@ -36,6 +39,7 @@ namespace ResignationAPI.Controllers
         {
             try
             {
+                // called the Get resignations service
                 var resignation = await _resignationRepository.GetAsync(limit, index , sortKey , sortDirection, id, status, userId);
                 if (resignation == null)
                 {
@@ -49,7 +53,8 @@ namespace ResignationAPI.Controllers
                 _response.Data = resignation;
                 return _response;
             }
-            catch (Exception) {
+            catch (Exception ex) {
+                _loggingRepository.LogError(ex.Message);
                 throw;
             }
         }
@@ -64,6 +69,7 @@ namespace ResignationAPI.Controllers
             try
             {
                 _response.StatusCode = HttpStatusCode.BadRequest;
+                // validations on resignRequestDTO
                 if (resignRequestDTO.ResignationDate < DateTime.Now)
                 {
                     _response.Message = "Please Enter the valid date";
@@ -73,19 +79,17 @@ namespace ResignationAPI.Controllers
                 {
                     _response.Message = "Please Enter the Reason";
                     return _response;
-                }             
-                Resignation request = new Resignation()
-                {
-                    UserId = userId,
-                    Status = "Pending",
-                    Reason = resignRequestDTO.Reason,
-                    ResignationDate = resignRequestDTO.ResignationDate,
-                    RevealingDate = resignRequestDTO.ResignationDate.AddMonths(2),
-                    Comments = resignRequestDTO.Comments!,
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now,
-                    ApprovedBy = null,
-                };
+                }
+                // mapping resignRequestDTO into Resignation
+                Resignation request = _mapper.Map<Resignation>(resignRequestDTO);
+                request.UserId = userId;
+                request.Status = "Pending";
+                request.RevealingDate = resignRequestDTO.ResignationDate.AddMonths(2);
+                request.CreatedAt = DateTime.Now;
+                request.UpdatedAt = DateTime.Now;
+                request.ApprovedBy = null;
+
+                // called the create resignation service
                 await _resignationRepository.CreateAsync(request);
 
                 _response.StatusCode = HttpStatusCode.OK;
@@ -94,8 +98,9 @@ namespace ResignationAPI.Controllers
                 _response.Data = resignRequestDTO;
                 return Ok(_response);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _loggingRepository.LogError(ex.Message);
                 throw;
             }
         }
@@ -109,7 +114,7 @@ namespace ResignationAPI.Controllers
             var userClaims = User.Claims;
             var userId = userClaims.FirstOrDefault(c => c.Type == "_id")?.Value;
             try
-            {   
+            {   // called the get resignation service
                 var updateResign = await _resignationRepository.GetByIdAsync(id);
                 if (updateResign == null)
                 {
@@ -118,6 +123,7 @@ namespace ResignationAPI.Controllers
                     return _response;
                 }
 
+                // validations on resignUpdateDTO
                 if (resignUpdateDTO.ResignationDate == DateTime.MinValue)
                 {
                     resignUpdateDTO.ResignationDate = updateResign.ResignationDate;
@@ -134,19 +140,23 @@ namespace ResignationAPI.Controllers
                         }
                     }
                 }
-                if (resignUpdateDTO.Reason == null)
+
+                if (string.IsNullOrEmpty(resignUpdateDTO.Reason))
                 {
                     resignUpdateDTO.Reason = updateResign.Reason;
                 }
-                if (resignUpdateDTO.Comments == null)
+                if (string.IsNullOrEmpty(resignUpdateDTO.Comments))
                 {
                     resignUpdateDTO.Comments = updateResign.Comments;
                 }
+
+                // updated the resignation details
                 updateResign.Reason = resignUpdateDTO.Reason;
                 updateResign.ResignationDate = resignUpdateDTO.ResignationDate;
                 updateResign.Comments = resignUpdateDTO.Comments;
                 updateResign.UpdatedAt = DateTime.Now;
 
+                // called the update resignation service
                 await _resignationRepository.UpdateAsync(id, updateResign);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Status = true;
@@ -154,10 +164,11 @@ namespace ResignationAPI.Controllers
                 _response.Data = resignUpdateDTO;
                 return _response;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _loggingRepository.LogError(ex.Message);
                 throw;
-            }        
+            }
         }
 
         [HttpDelete("{id:length(24)}"), Authorize]
@@ -169,6 +180,7 @@ namespace ResignationAPI.Controllers
             var userId = userClaims.FirstOrDefault(c => c.Type == "_id")?.Value;
             try
             {
+                // called the get resignation service
                 var resignation = await _resignationRepository.GetByIdAsync(id);
                 if (resignation == null)
                 {
@@ -176,17 +188,19 @@ namespace ResignationAPI.Controllers
                     _response.Message = "Resignation Not Found";
                     return _response;
                 }
+                // called the remove resignation service
                 await _resignationRepository.RemoveAsync(id);
                 _response.StatusCode = HttpStatusCode.OK;
                 _response.Status = true;
                 _response.Message = "Deleted the Resignation";
                 return _response;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _loggingRepository.LogError(ex.Message);
                 throw;
             }
-           
         }
+
     }
 }

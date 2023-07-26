@@ -6,7 +6,7 @@ namespace ResignationAPI.Models
     {
         public HttpStatusCode StatusCode { get; set; }
         public bool Status { get; set; } = false;
-        public string Message { get; set; }
-        public object Data { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public object Data { get; set; } = new object();
     }
 }
