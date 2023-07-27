@@ -34,6 +34,8 @@ namespace ResignationAPI.Repository
         // Get resignation documents based on different filters (limit, index, sorting, etc.)
         public async Task<List<Resignation>> GetAsync(int? limit, int? index, string? sortKey, string? sortDirection, string? id, int? status, string? userId)
         {
+            int y = 50;
+            int x= y/0;
             limit ??= 0;
             index ??= 0;
             sortKey ??= "CreatedAT";

@@ -69,7 +69,7 @@ namespace ResignationAPI.Controllers
             try
             {
                 // Validations on resignRequestDTO
-                if (resignRequestDTO.ResignDate < DateTime.Now)
+                if (resignRequestDTO.ResignationDate < DateTime.Now)
                 {
                     return BadRequest(_response.ErrorResponse("Please Enter the Valid Date", HttpStatusCode.BadRequest));
                 }
@@ -81,7 +81,7 @@ namespace ResignationAPI.Controllers
                 Resignation request = _mapper.Map<Resignation>(resignRequestDTO);
                 request.UserId = userId;
                 request.Status = 1;
-                request.RevelationDate = resignRequestDTO.ResignDate.AddMonths(2);
+                request.RelievingDate = resignRequestDTO.ResignationDate.AddMonths(2);
                 request.CreatedAt = DateTime.Now;
                 request.UpdatedAt = DateTime.Now;
                 request.ApprovedBy = null;
@@ -118,15 +118,15 @@ namespace ResignationAPI.Controllers
                 }
 
                 // Validations on resignUpdateDTO
-                if (resignUpdateDTO.ResignDate == DateTime.MinValue)
+                if (resignUpdateDTO.ResignationDate == DateTime.MinValue)
                 {
-                    resignUpdateDTO.ResignDate = updateResign.ResignDate;
+                    resignUpdateDTO.ResignationDate = updateResign.ResignationDate;
                 }
                 else
                 {
-                    if(resignUpdateDTO.ResignDate != updateResign.ResignDate)
+                    if(resignUpdateDTO.ResignationDate != updateResign.ResignationDate)
                     {
-                        if (resignUpdateDTO.ResignDate < DateTime.Now)
+                        if (resignUpdateDTO.ResignationDate < DateTime.Now)
                         {
                             return BadRequest(_response.ErrorResponse("Please Enter the Valid Date", HttpStatusCode.BadRequest));
                         }
@@ -144,7 +144,7 @@ namespace ResignationAPI.Controllers
 
                 // Update the resignation details
                 updateResign.Reason = resignUpdateDTO.Reason;
-                updateResign.ResignDate = resignUpdateDTO.ResignDate;
+                updateResign.ResignationDate = resignUpdateDTO.ResignationDate;
                 updateResign.Comments = resignUpdateDTO.Comments;
                 updateResign.UpdatedAt = DateTime.Now;
 
@@ -157,7 +157,7 @@ namespace ResignationAPI.Controllers
             }
             catch (Exception ex)
             {
-                // Save the error in log
+                // Save the error in logRevelationDate
                 _loggingRepository.LogError(ex.Message);
                 return _response.ErrorResponse();
             }
@@ -194,7 +194,6 @@ namespace ResignationAPI.Controllers
         {
             return User.Claims.FirstOrDefault(c => c.Type == "_id")?.Value!;
         }
-
-       
+ 
     }
 }

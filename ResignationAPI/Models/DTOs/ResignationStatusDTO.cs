@@ -6,6 +6,6 @@ namespace ResignationAPI.Models.DTOs
     public class ResignationStatusDTO
     {
         public int Status { get; set; }
-        public DateTime RevelationDate { get; set; }
+        public DateTime RelievingDate { get; set; }
     }
 }

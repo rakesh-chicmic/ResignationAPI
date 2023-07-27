@@ -15,7 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<DatabaseSettings>(
     builder.Configuration.GetSection("Database"));
 
-builder.Services.AddScoped<IResignationRepository,ResignationRepository>();
+builder.Services.AddScoped<IResignationRepository, ResignationRepository>();
 builder.Services.AddScoped<ILoggingRepository, LoggingRepository>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
@@ -51,16 +51,15 @@ builder.Services.AddSwaggerGen(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
 
 app.UseHttpsRedirection();
 app.UseRouting();
 
-app.UseAuthentication(); 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

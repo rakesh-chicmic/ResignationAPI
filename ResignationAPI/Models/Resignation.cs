@@ -16,10 +16,10 @@ namespace ResignationAPI.Models
         [BsonElement("status")]
         public int Status { get; set; }
 
-        [BsonElement("resignDate")]
-        public DateTime ResignDate { get; set; }
-        [BsonElement("revelationDate")]
-        public DateTime RevelationDate { get; set; }
+        [BsonElement("resignationDate")]
+        public DateTime ResignationDate { get; set; }
+        [BsonElement("relievingDate")]
+        public DateTime RelievingDate { get; set; }
 
         [BsonElement("reason")]
         public string? Reason { get; set; }

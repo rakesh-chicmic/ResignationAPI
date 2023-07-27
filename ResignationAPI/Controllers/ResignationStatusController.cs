@@ -46,15 +46,15 @@ namespace ResignationAPI.Controllers
                         return BadRequest(_response.ErrorResponse("Please Enter the Valid Status number", HttpStatusCode.BadRequest));
                     }
                 }
-                if (resignUpdateDTO.RevelationDate == DateTime.MinValue)
+                if (resignUpdateDTO.RelievingDate == DateTime.MinValue)
                 {
-                    resignUpdateDTO.RevelationDate = updateResign.RevelationDate;
+                    resignUpdateDTO.RelievingDate = updateResign.RelievingDate;
                 }
                 else
                 {
-                    if (resignUpdateDTO.RevelationDate != updateResign.RevelationDate)
+                    if (resignUpdateDTO.RelievingDate != updateResign.RelievingDate)
                     {
-                        if (resignUpdateDTO.RevelationDate < DateTime.Now)
+                        if (resignUpdateDTO.RelievingDate < DateTime.Now)
                         {
                             return BadRequest(_response.ErrorResponse("Please Enter the Valid Date", HttpStatusCode.BadRequest));
                         }
@@ -63,7 +63,7 @@ namespace ResignationAPI.Controllers
 
                 // Update the resignation details
                 updateResign.Status = resignUpdateDTO.Status;
-                updateResign.RevelationDate = resignUpdateDTO.RevelationDate;
+                updateResign.RelievingDate = resignUpdateDTO.RelievingDate;
                 updateResign.ApprovedBy = userId;
                 updateResign.UpdatedAt = DateTime.Now;
 
