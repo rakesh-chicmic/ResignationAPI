@@ -1,4 +1,5 @@
 ﻿using ResignationAPI.Models;
+using ResignationAPI.Models.DTOs;
 
 namespace ResignationAPI.Repository.IRepository
 {

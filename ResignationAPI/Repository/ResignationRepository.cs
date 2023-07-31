@@ -39,7 +39,7 @@ namespace ResignationAPI.Repository
             sortKey ??= "CreatedAT";
             sortDirection ??= "asc";
             id ??= "";
-            status ??= 1;
+            status ??= null;
             userId ??= "";
 
             // Define the sorting criteria based on the provided sortKey and sortDirection
@@ -47,10 +47,12 @@ namespace ResignationAPI.Repository
 
             // Define the filter for the query based on the provided filter criteria
             var searchFilter = Builders<Resignation>.Filter.Empty;
-            
-            var statusFilter = Builders<Resignation>.Filter.Eq(r => r.Status, status);
-            searchFilter &= statusFilter;
-            
+
+            if (status != null)
+            {
+                var statusFilter = Builders<Resignation>.Filter.Eq(r => r.Status, status);
+                searchFilter &= statusFilter;
+            }
             if (!string.IsNullOrEmpty(id))
             {
                 var idFilter = Builders<Resignation>.Filter.Eq(r => r.Id, id);

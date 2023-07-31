@@ -43,13 +43,13 @@ namespace ResignationAPI.Controllers
             try
             {
                 // Call the GetAsync method from the _resignationRepository to retrieve resignation details based on provided filters
-                var resignation = await _resignationRepository.GetAsync(limit, index , sortKey , sortDirection, id, status, userId);
+                List<Resignation> resignation = await _resignationRepository.GetAsync(limit, index , sortKey , sortDirection, id, status, userId);
                 if (resignation == null)
                 {
                     return NotFound(_response.ErrorResponse("Resignation Not Found",HttpStatusCode.NotFound));                  
                 }
                 _response.Message = "Resignation Details";
-                _response.Data = resignation;
+                _response.Data = _mapper.Map<List<ResignationDTO>>(resignation);
                 return Ok(_response);
             }
             catch (Exception ex) {

@@ -9,6 +9,7 @@ namespace ResignationAPI.Mappings
         public MappingProfile()
         {
             CreateMap<Resignation, ResignationRequestDTO>().ReverseMap();
+            CreateMap<Resignation, ResignationDTO>().ReverseMap();
         }
     }
 }
