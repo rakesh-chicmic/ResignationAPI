@@ -37,6 +37,8 @@ namespace ResignationAPI.Models
         [BsonRepresentation(BsonType.ObjectId)]
         [BsonElement("approvedBy")]
         public string? ApprovedBy { get; set; }
-        
+        [BsonElement("approverDetails")]
+        public object? ApproverDetails { get; set; }
+
     }
 }

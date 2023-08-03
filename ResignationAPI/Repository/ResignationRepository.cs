@@ -90,7 +90,18 @@ namespace ResignationAPI.Repository
                 }
             };
 
-            var pipelineStage6 = new BsonDocument
+            BsonDocument pipelineStage6 = new BsonDocument{
+                {
+                    "$lookup", new BsonDocument{
+                        { "from", "users" },
+                        { "localField", "approvedBy" },
+                        { "foreignField", "_id" },
+                        { "as", "approverDetails" }
+                    }
+                }
+            };
+
+            var pipelineStage7 = new BsonDocument
             {
                 {
                     "$project", new BsonDocument
@@ -105,15 +116,18 @@ namespace ResignationAPI.Repository
                         {"approvedBy",1 },
                         { "userDetails.name", 1 }, 
                         { "userDetails.employeeId", 1 },
-                        { "userDetails.email", 1 }
-
+                        { "userDetails.email", 1 },
+                        { "approverDetails.name", 1 },
+                        { "approverDetails.employeeId", 1 },
+                        { "approverDetails.email", 1 }
                     }
                 }
             };
 
-           BsonDocument pipelineStage7 = new BsonDocument("$skip",(index - 1) * limit);
-           BsonDocument pipelineStage8 = new BsonDocument("$limit", limit);
+           BsonDocument pipelineStage8 = new BsonDocument("$skip",(index - 1) * limit);
+           BsonDocument pipelineStage9 = new BsonDocument("$limit", limit);
 
+            // aggregate pipeline
             var pipeline = new List<BsonDocument>();
             if (status != null)
             {
@@ -133,10 +147,11 @@ namespace ResignationAPI.Repository
             pipeline.Add(pipelineStage4);             
             pipeline.Add(pipelineStage5);
             pipeline.Add(pipelineStage6);
+            pipeline.Add(pipelineStage7);
             if (index >= 1 && limit >= 1)
             {
-                pipeline.Add(pipelineStage7);
                 pipeline.Add(pipelineStage8);
+                pipeline.Add(pipelineStage9);
             } 
 
             var pResults = await _resignationCollection.Aggregate<ResignationWithUser>(pipeline).ToListAsync();          
