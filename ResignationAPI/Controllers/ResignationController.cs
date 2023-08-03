@@ -6,12 +6,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection.KeyManagement.Internal;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using ResignationAPI.Models;
 using ResignationAPI.Models.DTOs;
+using ResignationAPI.Repository;
 using ResignationAPI.Repository.IRepository;
+using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Text.Json;
 
 namespace ResignationAPI.Controllers
 {
@@ -38,26 +42,29 @@ namespace ResignationAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<APIResponse>> Get(int? limit, int? index, string? sortKey, string? sortDirection, int? status, string? id, string? userId)
+        public async Task<ActionResult<APIResponse>> Get(int? limit, int? index, string? sortKey, int? sortDirection, int? status, string? id, string? userId)
         {
+
             try
             {
                 // Call the GetAsync method from the _resignationRepository to retrieve resignation details based on provided filters
-                List<Resignation> resignation = await _resignationRepository.GetAsync(limit, index , sortKey , sortDirection, id, status, userId);
+                List<ResignationWithUser> resignation =  await _resignationRepository.GetAsync(limit, index, sortKey, sortDirection, id, status, userId);
                 if (resignation == null)
                 {
-                    return NotFound(_response.ErrorResponse("Resignation Not Found",HttpStatusCode.NotFound));                  
+                    return NotFound(_response.ErrorResponse("Resignation Not Found", HttpStatusCode.NotFound));
                 }
                 _response.Message = "Resignation Details";
-                _response.Data = _mapper.Map<List<ResignationDTO>>(resignation);
+                _response.Data = resignation;
                 return Ok(_response);
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 // Save the error in log
                 _loggingRepository.LogError(ex.Message);
                 return _response.ErrorResponse();
             }
         }
+
 
         [HttpPost,Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -152,7 +159,7 @@ namespace ResignationAPI.Controllers
                 await _resignationRepository.UpdateAsync(id, updateResign);
 
                 _response.Message = "Updated the Resignation Details";
-                _response.Data = resignUpdateDTO;
+                _response.Data = updateResign;
                 return Ok(_response);
             }
             catch (Exception ex)

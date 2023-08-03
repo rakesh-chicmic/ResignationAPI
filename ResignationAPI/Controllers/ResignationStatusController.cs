@@ -29,6 +29,7 @@ namespace ResignationAPI.Controllers
         public async Task<ActionResult<APIResponse>> Update(string id, ResignationStatusDTO resignUpdateDTO)
         {
             var userClaims = User.Claims;
+            
             var userId = userClaims.FirstOrDefault(c => c.Type == "_id")?.Value;
             try
             {
@@ -39,12 +40,20 @@ namespace ResignationAPI.Controllers
                     return NotFound(_response.ErrorResponse("Resignation Not Found", HttpStatusCode.NotFound));
                 }
                 // Validations on resignUpdateDTO
+
                 if (resignUpdateDTO.Status != updateResign.Status)
                 {
-                    if (resignUpdateDTO.Status >= 5 || resignUpdateDTO.Status <= 0)
+                    if (resignUpdateDTO.Status != 0)
                     {
-                        return BadRequest(_response.ErrorResponse("Please Enter the Valid Status number", HttpStatusCode.BadRequest));
+                        if (resignUpdateDTO.Status >= 5 || resignUpdateDTO.Status <= 0)
+                        {
+                            return BadRequest(_response.ErrorResponse("Please Enter the Valid Status number", HttpStatusCode.BadRequest));
+                        }
                     }
+                    else
+                    {
+                        resignUpdateDTO.Status = updateResign.Status;
+                    }   
                 }
                 if (resignUpdateDTO.RelievingDate == DateTime.MinValue)
                 {
@@ -70,7 +79,7 @@ namespace ResignationAPI.Controllers
                 // Call the UpdateAsync method from the _resignationRepository to update the resignation.
                 await _resignationRepository.UpdateAsync(id, updateResign);
                 _response.Message = "Updated the Status of Resignation";
-                _response.Data = resignUpdateDTO;
+                _response.Data = updateResign;
                 return Ok(_response);
             }
             catch (Exception ex)

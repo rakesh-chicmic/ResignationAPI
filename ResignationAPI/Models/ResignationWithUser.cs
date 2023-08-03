@@ -1,18 +1,18 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Bson;
-using System.Text.Json.Serialization;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace ResignationAPI.Models
 {
-    public class Resignation
+    public class ResignationWithUser 
     {
-        [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
         [BsonRepresentation(BsonType.ObjectId)]
         [BsonElement("userId")]
         public string? UserId { get; set; }
+        [BsonElement("userDetails")]
+        public object? UserDetails { get; set; }
 
         [BsonElement("status")]
         public int Status { get; set; }
@@ -32,10 +32,11 @@ namespace ResignationAPI.Models
         public DateTime CreatedAt { get; set; }
 
         [BsonElement("updatedAt")]
-        public DateTime UpdatedAt { get; set;}
+        public DateTime UpdatedAt { get; set; }
 
         [BsonRepresentation(BsonType.ObjectId)]
         [BsonElement("approvedBy")]
         public string? ApprovedBy { get; set; }
+        
     }
 }

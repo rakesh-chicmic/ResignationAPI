@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.Configure<DatabaseSettings>(
-    builder.Configuration.GetSection("Database"));
+    builder.Configuration.GetSection("MongoDatabase"));
 
 builder.Services.AddScoped<IResignationRepository, ResignationRepository>();
 builder.Services.AddScoped<ILoggingRepository, LoggingRepository>();
@@ -34,6 +34,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 });
 
 builder.Services.AddControllers();
+//builder.Services.AddControllers()
+//        .AddNewtonsoftJson(options => options.UseMemberCasing());
+
+
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>

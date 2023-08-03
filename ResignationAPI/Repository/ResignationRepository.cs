@@ -32,51 +32,116 @@ namespace ResignationAPI.Repository
         }
 
         // Get resignation documents based on different filters (limit, index, sorting, etc.)
-        public async Task<List<Resignation>> GetAsync(int? limit, int? index, string? sortKey, string? sortDirection, string? id, int? status, string? userId)
+        public async Task<List<ResignationWithUser>> GetAsync(int? limit, int? index, string? sortKey, int? sortDirection, string? id, int? status, string? userId)
         {
             limit ??= 0;
             index ??= 0;
-            sortKey ??= "CreatedAT";
-            sortDirection ??= "asc";
+            sortKey ??= "createdAt";
+            sortDirection ??= 1;
             id ??= "";
             status ??= null;
             userId ??= "";
+            
+            // pipeline stages
+             BsonDocument pipelineStage1 = new BsonDocument{
+                {
+                    "$match", new BsonDocument{
+                        { "status", status }
+                     
+                    }
+                }
+            };
+            ObjectId.TryParse(userId, out var objUserId);
+            BsonDocument pipelineStage2 = new BsonDocument{
+                {
+                    "$match", new BsonDocument{
+                        { "userId",  objUserId }
 
-            // Define the sorting criteria based on the provided sortKey and sortDirection
-            var sortDefinition = Builders<Resignation>.Sort.Ascending(sortKey);
+                    }
+                }
+            };
+            ObjectId.TryParse(id, out var objId);
+            BsonDocument pipelineStage3 = new BsonDocument{
+                {
+                    "$match", new BsonDocument{
+                        { "_id", objId }
 
-            // Define the filter for the query based on the provided filter criteria
-            var searchFilter = Builders<Resignation>.Filter.Empty;
+                    }
+                }
+            };
 
+            BsonDocument pipelineStage4 = new BsonDocument{
+                {
+                    "$sort", new BsonDocument{
+                        { char.ToLower(sortKey[0]) + sortKey.Substring(1), sortDirection }
+
+                    }
+                }
+            };
+
+            BsonDocument pipelineStage5 = new BsonDocument{
+                {
+                    "$lookup", new BsonDocument{
+                        { "from", "users" },
+                        { "localField", "userId" },
+                        { "foreignField", "_id" },
+                        { "as", "userDetails" }
+                    }
+                }
+            };
+
+            var pipelineStage6 = new BsonDocument
+            {
+                {
+                    "$project", new BsonDocument
+                    {
+                        {"userId",1 },
+                        {"status",1 },
+                        {"resignationdate" ,1},
+                        { "relievingDate",1},
+                        {"reason",1 },
+                        {"comments",1 },
+                        {"createdAt",1 },
+                        {"approvedBy",1 },
+                        { "userDetails.name", 1 }, 
+                        { "userDetails.employeeId", 1 },
+                        { "userDetails.email", 1 }
+
+                    }
+                }
+            };
+
+           BsonDocument pipelineStage7 = new BsonDocument("$skip",(index - 1) * limit);
+           BsonDocument pipelineStage8 = new BsonDocument("$limit", limit);
+
+            var pipeline = new List<BsonDocument>();
             if (status != null)
             {
-                var statusFilter = Builders<Resignation>.Filter.Eq(r => r.Status, status);
-                searchFilter &= statusFilter;
-            }
-            if (!string.IsNullOrEmpty(id))
-            {
-                var idFilter = Builders<Resignation>.Filter.Eq(r => r.Id, id);
-                searchFilter &= idFilter;
-            }
-            if (!string.IsNullOrEmpty(userId))
-            {
-                var userIdFilter = Builders<Resignation>.Filter.Eq(r => r.UserId, userId);
-                searchFilter &= userIdFilter;
+                pipeline.Add(pipelineStage1);
             }
 
-            if (sortDirection.ToLower() == "desc")
+            if (userId!="")
             {
-                sortDefinition = Builders<Resignation>.Sort.Descending(sortKey);
+                pipeline.Add(pipelineStage2);
             }
 
-            if (sortDirection.ToLower() == "asc")
+            if (id!="")
             {
-                sortDefinition = Builders<Resignation>.Sort.Ascending(sortKey);
+                pipeline.Add(pipelineStage3);
             }
+            
+            pipeline.Add(pipelineStage4);             
+            pipeline.Add(pipelineStage5);
+            pipeline.Add(pipelineStage6);
+            if (index >= 1 && limit >= 1)
+            {
+                pipeline.Add(pipelineStage7);
+                pipeline.Add(pipelineStage8);
+            } 
 
-            // Perform the database query using the filter and sorting criteria, and apply pagination
-            var resignations = await _resignationCollection.Find(searchFilter).Sort(sortDefinition).Skip((index - 1) * limit).Limit(limit).ToListAsync();
-            return resignations;
+            var pResults = await _resignationCollection.Aggregate<ResignationWithUser>(pipeline).ToListAsync();          
+            return pResults;
+            
         }
 
         // Create a new resignation request document in the database
