@@ -97,7 +97,7 @@ namespace ResignationAPI.Controllers
                     {
                         ToEmail = usersDetails[0].HubstaffEmail,
                         Subject ="Resignation Approved",
-                        Body = $"Hello {usersDetails[0].Name},\nYour Resignation  has been approved by {approverDetails[0].Name}.\n\nRegards,\nTeam ChicMic\n",                
+                        Body = $"Hello {usersDetails[0].Name},<br/><br/>Your Resignation has been approved by {approverDetails[0].Name}.<br/><br/><br/><br/>Regards,<br/>Team ChicMic<br/>",                
                     };
                     await _mailService.SendEmailAsync(mailRequest);
                 }
