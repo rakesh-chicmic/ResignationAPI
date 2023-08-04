@@ -41,13 +41,13 @@ namespace ResignationAPI.Repository
             id ??= "";
             status ??= null;
             userId ??= "";
-            
+
             // pipeline stages
-             BsonDocument pipelineStage1 = new BsonDocument{
+            BsonDocument pipelineStage1 = new BsonDocument{
                 {
                     "$match", new BsonDocument{
                         { "status", status }
-                     
+
                     }
                 }
             };
@@ -114,12 +114,14 @@ namespace ResignationAPI.Repository
                         {"comments",1 },
                         {"createdAt",1 },
                         {"approvedBy",1 },
-                        { "userDetails.name", 1 }, 
+                        { "userDetails.name", 1 },
                         { "userDetails.employeeId", 1 },
                         { "userDetails.email", 1 },
+                         { "userDetails.hubstaffEmail", new BsonDocument("$arrayElemAt", new BsonArray { "$userDetails.hubstaffId.email", 0 }) },
                         { "approverDetails.name", 1 },
                         { "approverDetails.employeeId", 1 },
-                        { "approverDetails.email", 1 }
+                        { "approverDetails.email", 1 },
+                        { "approverDetails.hubstaffEmail", new BsonDocument("$arrayElemAt", new BsonArray { "$approverDetails.hubstaffId.email", 0 }) }
                     }
                 }
             };

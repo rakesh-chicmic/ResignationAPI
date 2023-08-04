@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using Newtonsoft.Json;
 using ResignationAPI.Models;
 using ResignationAPI.Models.DTOs;
 using ResignationAPI.Repository;
@@ -32,7 +33,6 @@ namespace ResignationAPI.Controllers
         public ResignationController(IResignationRepository resignationRepository,IMapper mapper, ILoggingRepository loggingRepository)
         {
             _resignationRepository = resignationRepository;
-            _resignationRepository = resignationRepository;
             _loggingRepository = loggingRepository;
             _mapper = mapper;         
             _response = new();
@@ -49,6 +49,7 @@ namespace ResignationAPI.Controllers
             {
                 // Call the GetAsync method from the _resignationRepository to retrieve resignation details based on provided filters
                 List<ResignationWithUser> resignation =  await _resignationRepository.GetAsync(limit, index, sortKey, sortDirection, id, status, userId);
+               
                 if (resignation == null)
                 {
                     return NotFound(_response.ErrorResponse("Resignation Not Found", HttpStatusCode.NotFound));

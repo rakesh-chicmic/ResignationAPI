@@ -6,6 +6,7 @@ using ResignationAPI.Models;
 using ResignationAPI.Repository;
 using ResignationAPI.Repository.IRepository;
 using Swashbuckle.AspNetCore.Filters;
+using System.Configuration;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,8 @@ builder.Services.Configure<DatabaseSettings>(
 
 builder.Services.AddScoped<IResignationRepository, ResignationRepository>();
 builder.Services.AddScoped<ILoggingRepository, LoggingRepository>();
+builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
+builder.Services.AddScoped<IMailService, MailService>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
