@@ -48,14 +48,26 @@ namespace ResignationAPI.Controllers
             try
             {
                 // Call the GetAsync method from the _resignationRepository to retrieve resignation details based on provided filters
+                
                 List<ResignationWithUser> resignation =  await _resignationRepository.GetAsync(limit, index, sortKey, sortDirection, id, status, userId);
+                
                
                 if (resignation == null)
                 {
                     return NotFound(_response.ErrorResponse("Resignation Not Found", HttpStatusCode.NotFound));
                 }
                 _response.Message = "Resignation Details";
-                _response.Data = resignation;
+                DataList datalist = new DataList();
+                datalist.Data = resignation;
+                datalist.TotalCount = resignation.Count;
+                List<ResignationWithUser> resignationslist;
+                if (limit != null && index != null)
+                {
+                    resignationslist = await _resignationRepository.GetAsync(null, null, null, 1, null, null, null);
+                    datalist.TotalCount = resignationslist.Count;
+                }
+                
+                _response.Data = datalist;
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -153,6 +165,7 @@ namespace ResignationAPI.Controllers
                 // Update the resignation details
                 updateResign.Reason = resignUpdateDTO.Reason;
                 updateResign.ResignationDate = resignUpdateDTO.ResignationDate;
+                updateResign.RelievingDate = resignUpdateDTO.ResignationDate.AddMonths(2);
                 updateResign.Comments = resignUpdateDTO.Comments;
                 updateResign.UpdatedAt = DateTime.Now;
 
@@ -160,6 +173,7 @@ namespace ResignationAPI.Controllers
                 await _resignationRepository.UpdateAsync(id, updateResign);
 
                 _response.Message = "Updated the Resignation Details";
+               
                 _response.Data = updateResign;
                 return Ok(_response);
             }

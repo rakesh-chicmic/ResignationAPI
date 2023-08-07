@@ -26,7 +26,7 @@ namespace ResignationAPI.Repository
         }
 
         // Get a single resignation document by its id
-        public async Task<Resignation?> GetByIdAsync(string id)
+        public async Task<Resignation?> GetByIdAsync(string id="")
         {
             return await _resignationCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
         }
@@ -108,7 +108,7 @@ namespace ResignationAPI.Repository
                     {
                         {"userId",1 },
                         {"status",1 },
-                        {"resignationdate" ,1},
+                        {"resignationDate" ,1},
                         { "relievingDate",1},
                         {"reason",1 },
                         {"comments",1 },
@@ -155,7 +155,6 @@ namespace ResignationAPI.Repository
                 pipeline.Add(pipelineStage8);
                 pipeline.Add(pipelineStage9);
             } 
-
             var pResults = await _resignationCollection.Aggregate<ResignationWithUser>(pipeline).ToListAsync();          
             return pResults;
             
