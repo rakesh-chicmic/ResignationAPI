@@ -84,7 +84,8 @@ namespace ResignationAPI.Controllers
                 updateResign.RelievingDate = resignUpdateDTO.RelievingDate;
                 updateResign.ApprovedBy = userId;
                 updateResign.UpdatedAt = DateTime.Now;
-                List<ResignationWithUser> resignation = await _resignationRepository.GetAsync(0, 0, null, 1, id,null , null);
+                DataList datalist = await _resignationRepository.GetAsync( null, 1, id,null , null, 0, 0);
+                List<ResignationWithUser> resignation = datalist.Data;
 
                 string userResponse = JsonConvert.SerializeObject(resignation[0].UserDetails);
                 List<User> usersDetails = JsonConvert.DeserializeObject<List<User>>(userResponse)!;

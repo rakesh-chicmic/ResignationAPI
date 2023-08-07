@@ -2,7 +2,7 @@
 {
     public class DataList
     {
-        public object? Data {  get; set; }
+        public List<ResignationWithUser> Data { get; set; } = new();
         public int TotalCount { get; set; }
     }
 }

@@ -4,6 +4,7 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using ResignationAPI.Models;
 using ResignationAPI.Repository.IRepository;
+using System.Linq;
 
 namespace ResignationAPI.Repository
 {
@@ -32,10 +33,10 @@ namespace ResignationAPI.Repository
         }
 
         // Get resignation documents based on different filters (limit, index, sorting, etc.)
-        public async Task<List<ResignationWithUser>> GetAsync(int? limit, int? index, string? sortKey, int? sortDirection, string? id, int? status, string? userId)
+        public async Task<DataList> GetAsync( string? sortKey, int? sortDirection, string? id, int? status, string? userId, int limit = 10, int index = 1)
         {
-            limit ??= 0;
-            index ??= 0;
+            /*limit ??= 0;
+            index ??= 0;*/
             sortKey ??= "createdAt";
             sortDirection ??= 1;
             id ??= "";
@@ -150,14 +151,17 @@ namespace ResignationAPI.Repository
             pipeline.Add(pipelineStage5);
             pipeline.Add(pipelineStage6);
             pipeline.Add(pipelineStage7);
+            
+            var pResults = await _resignationCollection.Aggregate<ResignationWithUser>(pipeline).ToListAsync();
+            int count = pResults.Count();
             if (index >= 1 && limit >= 1)
             {
-                pipeline.Add(pipelineStage8);
-                pipeline.Add(pipelineStage9);
-            } 
-            var pResults = await _resignationCollection.Aggregate<ResignationWithUser>(pipeline).ToListAsync();          
-            return pResults;
-            
+                pResults = pResults.Skip((index - 1) * limit).Take(limit).ToList();
+            }
+            DataList result = new DataList();
+            result.TotalCount = count;
+            result.Data = pResults;
+            return result;   
         }
 
         // Create a new resignation request document in the database

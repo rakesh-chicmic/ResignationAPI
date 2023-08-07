@@ -42,14 +42,14 @@ namespace ResignationAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<APIResponse>> Get(int? limit, int? index, string? sortKey, int? sortDirection, int? status, string? id, string? userId)
+        public async Task<ActionResult<APIResponse>> Get(int limit, int index, string? sortKey, int? sortDirection, int? status, string? id, string? userId)
         {
 
             try
             {
                 // Call the GetAsync method from the _resignationRepository to retrieve resignation details based on provided filters
                 
-                List<ResignationWithUser> resignation =  await _resignationRepository.GetAsync(limit, index, sortKey, sortDirection, id, status, userId);
+                DataList resignation =  await _resignationRepository.GetAsync(sortKey, sortDirection, id, status, userId, limit, index);
                 
                
                 if (resignation == null)
@@ -57,17 +57,7 @@ namespace ResignationAPI.Controllers
                     return NotFound(_response.ErrorResponse("Resignation Not Found", HttpStatusCode.NotFound));
                 }
                 _response.Message = "Resignation Details";
-                DataList datalist = new DataList();
-                datalist.Data = resignation;
-                datalist.TotalCount = resignation.Count;
-                List<ResignationWithUser> resignationslist;
-                if (limit != null && index != null)
-                {
-                    resignationslist = await _resignationRepository.GetAsync(null, null, null, 1, null, null, null);
-                    datalist.TotalCount = resignationslist.Count;
-                }
-                
-                _response.Data = datalist;
+                _response.Data = resignation;
                 return Ok(_response);
             }
             catch (Exception ex)
