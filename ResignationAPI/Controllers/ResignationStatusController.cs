@@ -22,7 +22,7 @@ namespace ResignationAPI.Controllers
         private readonly ILoggingRepository _loggingRepository;
         private readonly IMailService _mailService;
         APIResponse _response;
-        public ResignationStatusController(IResignationRepository resignationRepository, ILoggingRepository loggingRepository,IMailService mailService)
+        public ResignationStatusController(IResignationRepository resignationRepository, ILoggingRepository loggingRepository, IMailService mailService)
         {
             _resignationRepository = resignationRepository;
             _loggingRepository = loggingRepository;
@@ -30,7 +30,7 @@ namespace ResignationAPI.Controllers
             _response = new();
         }
 
-        [HttpPut("{id:length(24)}"),Authorize]
+        [HttpPut("{id:length(24)}"), Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -38,7 +38,7 @@ namespace ResignationAPI.Controllers
         public async Task<ActionResult<APIResponse>> Update(string id, ResignationStatusDTO resignUpdateDTO)
         {
             var userClaims = User.Claims;
-            
+
             var userId = userClaims.FirstOrDefault(c => c.Type == "_id")?.Value;
             try
             {
@@ -62,7 +62,7 @@ namespace ResignationAPI.Controllers
                     else
                     {
                         resignUpdateDTO.Status = updateResign.Status;
-                    }   
+                    }
                 }
                 if (resignUpdateDTO.RelievingDate == DateTime.MinValue)
                 {
@@ -84,34 +84,19 @@ namespace ResignationAPI.Controllers
                 updateResign.RelievingDate = resignUpdateDTO.RelievingDate;
                 updateResign.ApprovedBy = userId;
                 updateResign.UpdatedAt = DateTime.Now;
-                DataList datalist = await _resignationRepository.GetAsync( null, 1, id,null , null, 0, 0);
+
+                // Get the resignation details with user and approver
+                DataList datalist = await _resignationRepository.GetAsync(null, 1, id, null, null, 0, 0);
                 List<ResignationWithUser> resignation = datalist.Data;
 
-                string userResponse = JsonConvert.SerializeObject(resignation[0].UserDetails);
-                List<User> usersDetails = JsonConvert.DeserializeObject<List<User>>(userResponse)!;
-
-                string approverResponse = JsonConvert.SerializeObject(resignation[0].ApproverDetails);
-                List<User> approverDetails = JsonConvert.DeserializeObject<List<User>>(approverResponse)!;
                 if (resignation[0].Status == 3)
                 {
-                    MailRequest mailRequest = new MailRequest()
-                    {
-                        ToEmail = usersDetails[0].HubstaffEmail,
-                        Subject ="Resignation Approved",
-                        Body = $"Hello {usersDetails[0].Name},<br/><br/>Your Resignation has been approved by {approverDetails[0].Name}.<br/><br/><br/><br/>Regards,<br/>Team ChicMic<br/>",                
-                    };
-                    await _mailService.SendEmailAsync(mailRequest);
+                    await SendEmail(resignation[0], "Approved");
                 }
 
                 if (resignation[0].Status == 4)
                 {
-                    MailRequest mailRequest = new MailRequest()
-                    {
-                        ToEmail = usersDetails[0].HubstaffEmail,
-                        Subject = "Resignation Disapproved",
-                        Body = $"Hello {usersDetails[0].Name},<br/><br/>Your Resignation has been disapproved by {approverDetails[0].Name}.<br/><br/><br/><br/>Regards,<br/>Team ChicMic<br/>",
-                    };
-                    await _mailService.SendEmailAsync(mailRequest);
+                    await SendEmail(resignation[0], "Disapproved");
                 }
 
                 // Call the UpdateAsync method from the _resignationRepository to update the resignation.
@@ -125,7 +110,21 @@ namespace ResignationAPI.Controllers
                 // Save the error in log
                 _loggingRepository.LogError(ex.Message);
                 return _response.ErrorResponse();
-            }         
+            }
         }
+
+        private async Task SendEmail(ResignationWithUser resignation, string action)
+        {
+            var userDetails = JsonConvert.DeserializeObject<List<User>>(JsonConvert.SerializeObject(resignation.UserDetails))!;
+            var approverDetails = JsonConvert.DeserializeObject<List<User>>(JsonConvert.SerializeObject(resignation.ApproverDetails))!;
+            MailRequest mailRequest = new MailRequest()
+            {
+                ToEmail = userDetails[0].HubstaffEmail,
+                Subject = $"Resignation {action}",
+                Body = $"Hello {userDetails[0].Name},<br/><br/>Your Resignation has been {action.ToLower()} by {approverDetails[0].Name}.<br/><br/><br/><br/>Regards,<br/>Team ChicMic<br/>",
+            };
+            await _mailService.SendEmailAsync(mailRequest);
+        }
+
     }
 }

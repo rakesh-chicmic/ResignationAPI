@@ -35,8 +35,6 @@ namespace ResignationAPI.Repository
         // Get resignation documents based on different filters (limit, index, sorting, etc.)
         public async Task<DataList> GetAsync( string? sortKey, int? sortDirection, string? id, int? status, string? userId, int limit = 10, int index = 1)
         {
-            /*limit ??= 0;
-            index ??= 0;*/
             sortKey ??= "createdAt";
             sortDirection ??= 1;
             id ??= "";
@@ -126,9 +124,6 @@ namespace ResignationAPI.Repository
                     }
                 }
             };
-
-           BsonDocument pipelineStage8 = new BsonDocument("$skip",(index - 1) * limit);
-           BsonDocument pipelineStage9 = new BsonDocument("$limit", limit);
 
             // aggregate pipeline
             var pipeline = new List<BsonDocument>();
