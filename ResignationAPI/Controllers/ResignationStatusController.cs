@@ -103,6 +103,17 @@ namespace ResignationAPI.Controllers
                     await _mailService.SendEmailAsync(mailRequest);
                 }
 
+                if (resignation[0].Status == 4)
+                {
+                    MailRequest mailRequest = new MailRequest()
+                    {
+                        ToEmail = usersDetails[0].HubstaffEmail,
+                        Subject = "Resignation Disapproved",
+                        Body = $"Hello {usersDetails[0].Name},<br/><br/>Your Resignation has been disapproved by {approverDetails[0].Name}.<br/><br/><br/><br/>Regards,<br/>Team ChicMic<br/>",
+                    };
+                    await _mailService.SendEmailAsync(mailRequest);
+                }
+
                 // Call the UpdateAsync method from the _resignationRepository to update the resignation.
                 await _resignationRepository.UpdateAsync(id, updateResign);
                 _response.Message = "Updated the Status of Resignation";
